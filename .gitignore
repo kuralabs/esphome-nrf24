@@ -1,0 +1,9 @@
+# ESPHome build artifacts
+.esphome/
+# Local secrets (never commit)
+secrets.yaml
+# Python
+*.pyc
+__pycache__/
+venv/
+.venv/

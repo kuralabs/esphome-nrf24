@@ -1,0 +1,121 @@
+########################
+# NRF24 Transmitter Example
+#
+# An ESP32 node with four physical buttons. Each press transmits a short text
+# message ("button_1" .. "button_4") over the NRF24L01+ radio using the
+# `nrf24.send` action. Pair this with the receiver example.
+########################
+
+substitutions:
+  device_id: nrf24-tx
+  device_name: NRF24 Transmitter
+
+esphome:
+  name: "${device_id}"
+  friendly_name: "${device_name}"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - password: ""
+    platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: ${device_name} Hotspot
+    password: !secret wifi_fallback_password
+
+captive_portal:
+
+# SPI bus shared with the NRF24 radio
+spi:
+  clk_pin: GPIO14  # SCK
+  mosi_pin: GPIO13 # MOSI
+  miso_pin: GPIO12 # MISO
+
+########################
+# NRF24 Radio (TX)
+#
+# No `on_receive` is configured, so this node is transmit-only. The
+# `nrf24.send` action is always available regardless.
+########################
+
+nrf24:
+  id: radio
+  ce_pin: GPIO4
+  csn_pin: GPIO15
+  channel: 76
+  pa_level: HIGH
+  data_rate: 1MBPS
+  tx_address: [0xDE, 0xAD, 0xC0, 0xDE, 0x01]
+
+# Four physical push buttons, each sending a distinct message on press.
+binary_sensor:
+  - platform: gpio
+    name: "Button 1"
+    pin:
+      number: GPIO32
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    on_press:
+      - nrf24.send:
+          id: radio
+          payload: "button_1"
+
+  - platform: gpio
+    name: "Button 2"
+    pin:
+      number: GPIO33
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    on_press:
+      - nrf24.send:
+          id: radio
+          payload: "button_2"
+
+  - platform: gpio
+    name: "Button 3"
+    pin:
+      number: GPIO16
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    on_press:
+      - nrf24.send:
+          id: radio
+          payload: "button_3"
+
+  - platform: gpio
+    name: "Button 4"
+    pin:
+      number: GPIO17
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    on_press:
+      # Payloads are templatable, so you can build them dynamically too.
+      - nrf24.send:
+          id: radio
+          payload: !lambda 'return "button_4";'

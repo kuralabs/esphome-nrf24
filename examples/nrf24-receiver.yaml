@@ -1,0 +1,163 @@
+########################
+# NRF24 Receiver Example
+#
+# An ESP32 node that listens for short text messages over an NRF24L01+ radio
+# and reacts to them (here: gate buttons + an audible buzzer confirmation).
+########################
+
+substitutions:
+  device_id: nrf24-rx
+  device_name: NRF24 Receiver
+  state_bounce: 2s
+  ring_good: "good:d=8,o=5,b=140: c4, e4, g4, c5"
+  ring_bad: "bad:d=8,o=5,b=100: c5, g4, e4, c4"
+
+esphome:
+  name: "${device_id}"
+  friendly_name: "${device_name}"
+
+  on_boot:
+    priority: 600
+    then:
+      - lambda: |-
+          id(gate_button_1).publish_state(false);
+          id(gate_button_2).publish_state(false);
+          id(gate_button_3).publish_state(false);
+          id(gate_button_4).publish_state(false);
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Load the NRF24 component from this repository. When consuming the component
+# in your own project, use the `github://` source shown in the README instead.
+external_components:
+  - source:
+      type: local
+      path: ../components
+
+########################
+# Software Stack Setup
+########################
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - password: ""
+    platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: ${device_name} Hotspot
+    password: !secret wifi_fallback_password
+
+captive_portal:
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+
+sensor:
+  - platform: uptime
+    name: "Uptime"
+    filters:
+      - lambda: return x / 3600;
+    unit_of_measurement: "h"
+    accuracy_decimals: 2
+
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+
+# Template binary sensors that momentarily report a button press
+binary_sensor:
+  - platform: template
+    id: gate_button_1
+    name: "Gate Button 1"
+    on_press:
+      - delay: ${state_bounce}
+      - lambda: 'id(gate_button_1).publish_state(false);'
+
+  - platform: template
+    id: gate_button_2
+    name: "Gate Button 2"
+    on_press:
+      - delay: ${state_bounce}
+      - lambda: 'id(gate_button_2).publish_state(false);'
+
+  - platform: template
+    id: gate_button_3
+    name: "Gate Button 3"
+    on_press:
+      - delay: ${state_bounce}
+      - lambda: 'id(gate_button_3).publish_state(false);'
+
+  - platform: template
+    id: gate_button_4
+    name: "Gate Button 4"
+    on_press:
+      - delay: ${state_bounce}
+      - lambda: 'id(gate_button_4).publish_state(false);'
+
+########################
+# Hardware Setup
+########################
+
+status_led:
+  pin: GPIO2
+
+output:
+  - platform: ledc
+    id: buzzer_output
+    pin: GPIO25
+    inverted: true
+
+rtttl:
+  id: buzzer
+  output: buzzer_output
+
+# SPI bus shared with the NRF24 radio
+spi:
+  clk_pin: GPIO14  # SCK
+  mosi_pin: GPIO13 # MOSI
+  miso_pin: GPIO12 # MISO
+
+########################
+# NRF24 Radio (RX)
+########################
+
+nrf24:
+  ce_pin: GPIO4
+  csn_pin: GPIO15
+  irq_pin: GPIO27
+  channel: 76
+  pa_level: LOW
+  data_rate: 1MBPS
+  rx_address: [0xDE, 0xAD, 0xC0, 0xDE, 0x01]
+  rx_pipe: 1
+  on_receive:
+    then:
+      - lambda: |-
+          if (message == "button_1") {
+            id(gate_button_1).publish_state(true);
+            id(buzzer).play("${ring_good}");
+          } else if (message == "button_2") {
+            id(gate_button_2).publish_state(true);
+            id(buzzer).play("${ring_good}");
+          } else if (message == "button_3") {
+            id(gate_button_3).publish_state(true);
+            id(buzzer).play("${ring_good}");
+          } else if (message == "button_4") {
+            id(gate_button_4).publish_state(true);
+            id(buzzer).play("${ring_good}");
+          } else {
+            id(buzzer).play("${ring_bad}");
+          }
