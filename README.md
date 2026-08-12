@@ -190,9 +190,50 @@ Complete, ready-to-build configurations live in [`examples/`](examples/):
 - [`nrf24-transmitter.yaml`](examples/nrf24-transmitter.yaml) — an ESP32 with
   physical buttons that transmit messages.
 
-Copy [`examples/secrets.example.yaml`](examples/secrets.example.yaml) to
-`examples/secrets.yaml` and fill in your own Wi-Fi / API credentials before
-building.
+The examples build against committed **dummy** credentials in
+[`examples/secrets.yaml`](examples/secrets.yaml) (clearly-placeholder values, so
+they can be validated and built out of the box). Replace them with your own
+Wi-Fi / API credentials before flashing a real device.
+
+## Testing
+
+The component is build-tested with [tox](https://tox.wiki/), using
+[uv](https://github.com/astral-sh/uv) (via the `tox-uv` plugin) to provision
+environments. Two complementary environments are provided:
+
+- **`validate`** — fast validation (no toolchain download) of the example configs
+  and the self-contained test config.
+- **`compile`** — a full ESPHome firmware build of
+  [`tests/nrf24-test.yaml`](tests/nrf24-test.yaml), which exercises both the RX
+  and TX code paths. The first run downloads the toolchain.
+
+```bash
+uvx --with tox-uv tox               # run both environments
+uvx --with tox-uv tox -e validate   # fast config validation only
+uvx --with tox-uv tox -e compile    # full firmware build only
+```
+
+The examples build against committed **dummy** secrets in
+[`examples/secrets.yaml`](examples/secrets.yaml) (throwaway placeholder values),
+so no real credentials are required for testing.
+
+### A note on ESP32 and recent ESPHome versions
+
+The `compile` smoke test targets the **ESP8266** deliberately. RF24 is an
+Arduino-only library, and the ESP8266 uses the classic PlatformIO Arduino build
+where it compiles cleanly. Since the component's C++ is plain Arduino code and
+identical across targets, this build fully validates it.
+
+Recent ESPHome releases build ESP32 *"arduino"* through the IDF-based
+`pioarduino` platform. That build system globs **all** of RF24's sources,
+including its Raspberry-Pi `utility/pigpio` backend (which needs `pigpio.h` /
+`SPI.h`), so compiling RF24 for ESP32 fails there. This is an upstream
+ESPHome/RF24 packaging interaction, not a problem with this component.
+
+If you target ESP32 (as the examples do), build with an ESPHome/PlatformIO
+toolchain that uses the **classic** `platformio/espressif32` Arduino platform
+(the last combination known to build RF24 on ESP32), e.g. by pinning the
+ESPHome version used to flash your device.
 
 ## License
 

@@ -1,9 +1,13 @@
 # ESPHome build artifacts
 .esphome/
-# Local secrets (never commit)
+# Local secrets (never commit)...
 secrets.yaml
+# ...except the throwaway dummy secrets used to build the examples in CI.
+!examples/secrets.yaml
 # Python
 *.pyc
 __pycache__/
 venv/
 .venv/
+# tox
+.tox/
