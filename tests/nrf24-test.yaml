@@ -3,19 +3,15 @@
 # credentials, and it exercises BOTH the RX (on_receive) and TX (nrf24.send)
 # code paths so the full component compiles.
 #
-# It targets the ESP8266 on purpose: the ESP8266 uses the classic PlatformIO
-# Arduino build, under which the RF24 library compiles cleanly. Current ESPHome
-# builds ESP32 "arduino" through the IDF-based `pioarduino` platform, which
-# globs *all* RF24 sources — including its Raspberry-Pi `utility/pigpio` backend
-# (needs `pigpio.h`/`SPI.h`) — and therefore fails to compile RF24. See the
-# README "Testing" section for details. The component itself is Arduino-only C++
-# and is identical across targets, so this ESP8266 build fully validates it.
+# It targets the ESP32, the real hardware target for this component.
 
 esphome:
   name: nrf24-test
 
-esp8266:
-  board: nodemcuv2
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
 
 logger:
 
@@ -26,15 +22,15 @@ external_components:
     components: [nrf24]
 
 spi:
-  clk_pin: GPIO14  # SCK / D5
-  mosi_pin: GPIO13 # MOSI / D7
-  miso_pin: GPIO12 # MISO / D6
+  clk_pin: GPIO14
+  mosi_pin: GPIO13
+  miso_pin: GPIO12
 
 nrf24:
   id: radio
-  ce_pin: GPIO4    # D2
-  csn_pin: GPIO15  # D8
-  irq_pin: GPIO5   # D1
+  ce_pin: GPIO4
+  csn_pin: GPIO15
+  irq_pin: GPIO27
   channel: 76
   pa_level: LOW
   data_rate: 1MBPS
