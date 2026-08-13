@@ -158,6 +158,24 @@ When a node has both `on_receive` and uses `nrf24.send`, the component
 automatically switches out of listening mode for the duration of each transmit
 and returns to listening afterwards.
 
+### Sending from a lambda
+
+The action is the recommended way to transmit, but the component also exposes a
+public `send()` method, so you can transmit from any lambda — including from
+unrelated components — via `id(radio).send(...)`. It takes a `std::string` and
+returns a `bool` (`true` when the receiver acknowledged the frame):
+
+```yaml
+# Anywhere a lambda is allowed, e.g. an interval, a script, or another
+# component's on_... trigger:
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          bool ok = id(radio).send("heartbeat");
+          ESP_LOGD("main", "nRF24 send %s", ok ? "acknowledged" : "failed");
+```
+
 ## Configuration Reference
 
 ### Component: `nrf24`

@@ -119,3 +119,9 @@ binary_sensor:
       - nrf24.send:
           id: radio
           payload: !lambda 'return "button_4";'
+      # You can also transmit straight from a lambda (even from unrelated
+      # components) by calling the component's public send() method. It returns
+      # a bool: true when the receiver acknowledged the frame.
+      # - lambda: |-
+      #     bool ok = id(radio).send("button_4");
+      #     ESP_LOGD("main", "nRF24 send %s", ok ? "acknowledged" : "failed");
