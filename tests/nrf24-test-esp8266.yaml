@@ -1,0 +1,55 @@
+# Self-contained configuration used as a build-test smoke test for the nrf24
+# component. It avoids Wi-Fi/API/secrets so it can be compiled in CI without any
+# credentials, and it exercises BOTH the RX (on_receive) and TX (nrf24.send)
+# code paths so the full component compiles.
+#
+# This is the ESP8266 counterpart of nrf24-test-esp32.yaml, so the compile env
+# validates the component on both supported platforms.
+
+esphome:
+  name: nrf24-test-esp8266
+
+esp8266:
+  board: nodemcuv2
+
+logger:
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [nrf24]
+
+spi:
+  clk_pin: GPIO14  # SCK / D5
+  mosi_pin: GPIO13 # MOSI / D7
+  miso_pin: GPIO12 # MISO / D6
+
+nrf24:
+  id: radio
+  ce_pin: GPIO4    # D2
+  csn_pin: GPIO15  # D8
+  irq_pin: GPIO5   # D1
+  channel: 76
+  pa_level: LOW
+  data_rate: 1MBPS
+  tx_address: [0xDE, 0xAD, 0xC0, 0xDE, 0x01]
+  rx_address: [0xDE, 0xAD, 0xC0, 0xDE, 0x01]
+  rx_pipe: 1
+  # RX path
+  on_receive:
+    then:
+      - logger.log:
+          format: "RX: %s"
+          args: ['message.c_str()']
+
+# TX path: periodically transmit to exercise the nrf24.send action compilation.
+interval:
+  - interval: 60s
+    then:
+      - nrf24.send:
+          id: radio
+          payload: "ping"
+      - nrf24.send:
+          id: radio
+          payload: !lambda 'return "pong";'

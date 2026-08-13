@@ -4,6 +4,8 @@ An [ESPHome](https://esphome.io/) external component for the **nRF24L01+** 2.4
 GHz radio, supporting both **receiving** (RX) and **transmitting** (TX) short
 text messages.
 
+![An ESP32 wired to an nRF24L01+ module running this ESPHome component.](esphome-nrf24.jpg)
+
 It is a thin, easy-to-use wrapper around the excellent
 [RF24](https://github.com/nRF24/RF24) library that exposes:
 
@@ -192,6 +194,11 @@ Complete, ready-to-build configurations live in [`examples/`](examples/):
   to incoming messages (gate buttons + buzzer feedback).
 - [`nrf24-transmitter.yaml`](examples/nrf24-transmitter.yaml) — an ESP32 with
   physical buttons that transmit messages.
+- [`arduino/nrf24_tx.ino`](examples/arduino/nrf24_tx.ino) — a plain **Arduino**
+  transmitter sketch (a battery-powered button remote) that is interoperable
+  with a node running this component in RX mode. Match its `PIPE_ADDRESS`,
+  channel and data rate to the component's `rx_address`, `channel` and
+  `data_rate`.
 
 The examples build against committed **dummy** credentials in
 [`examples/secrets.yaml`](examples/secrets.yaml). Replace them with your own
@@ -204,10 +211,12 @@ The component is build-tested with [tox](https://tox.wiki/), using
 environments. Two complementary environments are provided:
 
 - **`validate`** — fast validation (no toolchain download) of the example
-  configs and the self-contained test config.
-- **`compile`** — a full ESPHome firmware build of
-  [`tests/nrf24-test.yaml`](tests/nrf24-test.yaml) on the **ESP32**, exercising
-  both the RX and TX code paths. The first run downloads the toolchain.
+  configs and the self-contained test configs.
+- **`compile`** — full ESPHome firmware builds of the self-contained test
+  configs on **both supported platforms**
+  ([`tests/nrf24-test-esp32.yaml`](tests/nrf24-test-esp32.yaml) and
+  [`tests/nrf24-test-esp8266.yaml`](tests/nrf24-test-esp8266.yaml)), each
+  exercising the RX and TX code paths. The first run downloads the toolchain.
 
 ```bash
 uvx --with tox-uv tox               # run both environments
@@ -230,9 +239,10 @@ when it builds a configuration that uses this component.
 ### Why a fork?
 
 nRF24 fails to build in modern ESPHome versions. An upstream fix has been
-proposed as [nRF24/RF24#1078](https://github.com/nRF24/RF24/pull/1078).
+merged as [nRF24/RF24#1078](https://github.com/nRF24/RF24/pull/1078) and is
+awaiting a release.
 
-Once it is merged and released, this component can switch back to the upstream
+Once it is released, this component can switch back to the upstream
 `nRF24/RF24` package.
 
 ## License

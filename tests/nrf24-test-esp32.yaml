@@ -6,7 +6,7 @@
 # It targets the ESP32, the real hardware target for this component.
 
 esphome:
-  name: nrf24-test
+  name: nrf24-test-esp32
 
 esp32:
   board: esp32dev
