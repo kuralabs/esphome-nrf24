@@ -77,23 +77,11 @@ CONFIG_SCHEMA = cv.Schema(
 
 
 async def to_code(config):
-    # RF24 is pulled from our fork instead of the upstream registry package.
-    #
-    # On current ESPHome, ESP32 "arduino" is built through the IDF-based
-    # pioarduino platform, whose PlatformIO->ESP-IDF converter compiles *all*
-    # sources of a dependency (it does not run PlatformIO's Library Dependency
-    # Finder). Upstream RF24 therefore fails on ESP32 because it drags in its
-    # Linux/SBC-only backends under utility/ (pigpio, RPi, MRAA, ...), which
-    # need host-only headers such as pigpio.h.
-    #
-    # Our fork's `esphome-nrf24-compat` branch restricts the PlatformIO
-    # srcFilter to the single top-level RF24.cpp that Arduino targets actually
-    # need, so it builds cleanly on both ESP32 and ESP8266. Once the upstream
-    # fix lands and is released we can switch back to `nRF24/RF24`.
-    #   Upstream registry fix (export.exclude): https://github.com/nRF24/RF24/pull/1078
-    cg.add_library(
-        "RF24", None, "https://github.com/kuralabs/RF24.git#esphome-nrf24-compat"
-    )
+    # Pull RF24 from the upstream PlatformIO registry. v1.6.2 excludes the
+    # Linux/SBC-only backends under utility/ (pigpio, RPi, MRAA, ...) from the
+    # packaged library (see https://github.com/nRF24/RF24/pull/1078), so it
+    # builds cleanly on ESP32 (arduino/pioarduino -> ESP-IDF) and ESP8266.
+    cg.add_library("nRF24/RF24", "1.6.2")
     # RF24_config.h includes <SPI.h>; the IDF converter does not auto-discover
     # framework libraries, so pull in the Arduino SPI library explicitly. This
     # is standard ESPHome practice (esphome's own spi component does the same).

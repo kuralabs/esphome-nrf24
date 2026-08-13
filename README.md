@@ -230,20 +230,12 @@ so no real credentials are required for testing.
 
 ## The RF24 library dependency
 
-This component depends on the [RF24](https://github.com/nRF24/RF24) library,
-but pulls it from **[our fork](https://github.com/kuralabs/RF24)** (the
-`esphome-nrf24-compat` branch) rather than the upstream registry package. You
-do not need to install anything manually — ESPHome fetches it automatically
-when it builds a configuration that uses this component.
+This component depends on the [RF24](https://github.com/nRF24/RF24) library
+(v1.6.2 or later), which ESPHome fetches automatically from the PlatformIO
+registry — you do not need to install anything manually.
 
-### Why a fork?
-
-nRF24 fails to build in modern ESPHome versions. An upstream fix has been
-merged as [nRF24/RF24#1078](https://github.com/nRF24/RF24/pull/1078) and is
-awaiting a release.
-
-Once it is released, this component can switch back to the upstream
-`nRF24/RF24` package.
+RF24 versions before 1.6.2 fail to build under modern ESPHome on ESP32, for
+reference see [nRF24/RF24#1078](https://github.com/nRF24/RF24/pull/1078).
 
 ## License
 
